@@ -118,11 +118,11 @@ st.markdown('''<div class="c-navbar">
         <span>CodeDNA</span>
     </div>
     <div class="c-nav-links">
-        <a href="#" class="c-nav-link">Features</a>
-        <a href="#" class="c-nav-link">How It Works</a>
-        <a href="#" class="c-nav-link">FAQ</a>
+        <a href="#features" class="c-nav-link">Features</a>
+        <a href="#how-it-works" class="c-nav-link">How It Works</a>
+        <a href="#faq" class="c-nav-link">FAQ</a>
     </div>
-    <a href="#" class="c-btn c-btn-primary" style="padding:10px 20px">Get Started</a>
+    <a href="#demo" class="c-btn c-btn-primary" style="padding:10px 20px">Get Started</a>
 </div>''', unsafe_allow_html=True)
 
 
@@ -133,7 +133,7 @@ hc1, hc2 = st.columns([1.1, 1], gap="large")
 
 with hc1:
     st.markdown('''
-    <div style="padding: 60px 0 40px 0;">
+    <div id="demo" style="padding: 60px 0 40px 0;">
         <h1 class="c-heading" style="font-size:3.5rem;letter-spacing:-1px;">Understand Any Codebase Without Reading Files</h1>
         <p class="c-text" style="font-size:1.25rem;margin-top:-8px;margin-bottom:32px;">
             Paste a public GitHub repo URL and get instant semantic search, health diagnostics, and a visual 2D codebase genome map.
@@ -181,61 +181,64 @@ if btn and repo:
                 pct = int(min(keys.index(s)/(len(keys)-1), 1.0) * 100)
                 status_box.update(label=f"[{pct}%] {steps[s]}", state="running")
             
+            success_run = False
             try:
                 R = run_pipeline(repo, on_step)
                 status_box.update(label="✅ Analysis Complete!", state="complete", expanded=False)
                 st.session_state.done = True
-                st.success(f"✓ Successfully analyzed **{st.session_state.name}**")
-                
-                # Show Metrics
-                rd = R["health"].to_dict()
-                col1, col2, col3, col4, col5 = st.columns(5)
-                col1.metric("Code Units", len(R["units"]))
-                col2.metric("Lines of Code", f"{R['loc']:,}")
-                col3.metric("Languages", len(R["lc"]))
-                col4.metric("Health Grade", rd["grade"])
-                col5.metric("Health Score", f"{rd['overall_score']}/100")
-                
-                st.markdown("<br/>", unsafe_allow_html=True)
-                t1, t2, t3 = st.tabs(["🔍 Semantic Search Demo", "🏥 Health Diagnostics", "📈 Architecture Map"])
-                
-                with t1:
-                    st.markdown("### Ask questions about the codebase")
-                    sq = st.text_input("Search query", placeholder="e.g. How is data saved?", key="sq_hero")
-                    if sq:
-                        res = st.session_state.srch.hybrid_search(sq, R["units"], top_k=3)
-                        for idx_r, r in enumerate(res):
-                            with st.expander(f"`{r.unit.name}` (Score: {r.score:.2f})"):
-                                st.code(r.unit.content, language=r.unit.language)
-                
-                with t2:
-                    st.markdown("### Anti-Pattern Detections")
-                    violations = getattr(R["health"], "violations", [])
-                    if not violations:
-                        st.success("No major issues detected!")
-                    else:
-                        for issue in violations:
-                            st.warning(f"**{issue.pattern_name}** ({issue.severity}): {issue.description} in `{issue.code_unit_name}`")
-                            
-                with t3:
-                    st.markdown("### Codebase Vector Projection (t-SNE)")
-                    st.markdown("Visualising dense AI representations of the repository structurally.")
-                    if R.get("evo") and R["evo"].get("points"):
-                        import pandas as pd
-                        import plotly.express as px
-                        df = pd.DataFrame(R["evo"]["points"])
-                        fig = px.scatter(
-                            df, x="x", y="y", color="type",
-                            hover_name="name", hover_data=["file", "complexity"],
-                            title="2D Semantic Mapping of Functions/Classes"
-                        )
-                        st.plotly_chart(fig, use_container_width=True)
-                    else:
-                        st.info("No genome map data generated for this repository.")
-                
+                success_run = True
             except Exception as e:
                 status_box.update(label=f"❌ Analysis failed: {e}", state="error")
                 st.error(f"Analysis failed: {e}")
+
+        if success_run:
+            st.success(f"✓ Successfully analyzed **{st.session_state.name}**")
+            
+            # Show Metrics
+            rd = R["health"].to_dict()
+            col1, col2, col3, col4, col5 = st.columns(5)
+            col1.metric("Code Units", len(R["units"]))
+            col2.metric("Lines of Code", f"{R['loc']:,}")
+            col3.metric("Languages", len(R["lc"]))
+            col4.metric("Health Grade", rd["grade"])
+            col5.metric("Health Score", f"{rd['overall_score']}/100")
+            
+            st.markdown("<br/>", unsafe_allow_html=True)
+            t1, t2, t3 = st.tabs(["🔍 Semantic Search Demo", "🏥 Health Diagnostics", "📈 Architecture Map"])
+            
+            with t1:
+                st.markdown("### Ask questions about the codebase")
+                sq = st.text_input("Search query", placeholder="e.g. How is data saved?", key="sq_hero")
+                if sq:
+                    res = st.session_state.srch.hybrid_search(sq, R["units"], top_k=3)
+                    for idx_r, r in enumerate(res):
+                        with st.expander(f"`{r.unit.name}` (Score: {r.score:.2f})"):
+                            st.code(r.unit.content, language=r.unit.language)
+            
+            with t2:
+                st.markdown("### Anti-Pattern Detections")
+                violations = getattr(R["health"], "violations", [])
+                if not violations:
+                    st.success("No major issues detected!")
+                else:
+                    for issue in violations:
+                        st.warning(f"**{issue.pattern_name}** ({issue.severity}): {issue.description} in `{issue.code_unit_name}`")
+                        
+            with t3:
+                st.markdown("### Codebase Vector Projection (t-SNE)")
+                st.markdown("Visualising dense AI representations of the repository structurally.")
+                if R.get("evo") and R["evo"].get("points"):
+                    import pandas as pd
+                    import plotly.express as px
+                    df = pd.DataFrame(R["evo"]["points"])
+                    fig = px.scatter(
+                        df, x="x", y="y", color="type",
+                        hover_name="name", hover_data=["file", "complexity"],
+                        title="2D Semantic Mapping of Functions/Classes"
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No genome map data generated for this repository.")
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -289,7 +292,7 @@ st.markdown('''
 # 5. BENEFITS SECTION
 # ═══════════════════════════════════════════════════════════════════
 st.markdown('''
-<div class="c-section" style="background:var(--bg); margin:0 -2.5rem; padding:80px 2.5rem;">
+<div id="features" class="c-section" style="background:var(--bg); margin:0 -2.5rem; padding:80px 2.5rem;">
     <div class="c-section-title c-heading">Why You'll Love CodeDNA</div>
     <div class="c-benefits">
         <div class="c-benefit-card">
@@ -316,7 +319,7 @@ st.markdown('''
 # 6. HOW IT WORKS
 # ═══════════════════════════════════════════════════════════════════
 st.markdown('''
-<div class="c-section">
+<div id="how-it-works" class="c-section">
     <div class="c-section-title c-heading">How It Works</div>
     <div class="c-steps">
         <div class="c-step">
@@ -342,7 +345,7 @@ st.markdown('''
 # ═══════════════════════════════════════════════════════════════════
 # 9. FAQ SECTION
 # ═══════════════════════════════════════════════════════════════════
-st.markdown('<div class="c-section"><div class="c-section-title c-heading">Frequently Asked Questions</div>', unsafe_allow_html=True)
+st.markdown('<div id="faq" class="c-section"><div class="c-section-title c-heading">Frequently Asked Questions</div>', unsafe_allow_html=True)
 for q, a in [
     ("Is this right for me?", "If you regularly join new projects or deal with large undocumented codebases, CodeDNA will save you hours of tracing function calls."),
     ("How long does it take?", "Parsing and embedding takes about 30 seconds for a small repo (under 100 files) and a few minutes for massive codebases."),
@@ -361,7 +364,7 @@ st.markdown('''
 <div class="c-final-cta">
     <h2 class="c-heading">Ready to Master Your Codebase?</h2>
     <p class="c-font">Stop guessing. Start analyzing. Paste your first repository below and see the magic in 60 seconds.</p>
-    <a href="#" class="c-btn c-btn-white">Start Your Free Trial</a>
+    <a href="#demo" class="c-btn c-btn-white">Start Your Free Trial</a>
 </div>
 ''', unsafe_allow_html=True)
 

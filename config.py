@@ -32,7 +32,7 @@ ANTIPATTERN_DIMENSION = 384
 
 # ─── Embedding Model Configuration ──────────────────────────────────
 EMBEDDING_MODEL = os.getenv(
-    "EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"
+    "EMBEDDING_MODEL", "TaylorAI/bge-micro-v2"
 )
 CODE_EMBEDDING_MODEL = os.getenv(
     "CODE_EMBEDDING_MODEL", "microsoft/codebert-base"

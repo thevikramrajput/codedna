@@ -20,8 +20,10 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install Python dependencies
-# We use --no-cache-dir to keep the image size small
-RUN pip install --no-cache-dir -r requirements.txt
+# We use --no-cache-dir to keep the image size small.
+# We explicitly install the CPU version of PyTorch first. The default GPU bundle is 2.5GB and times out cloud builds!
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
 COPY . .

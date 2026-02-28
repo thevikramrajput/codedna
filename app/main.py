@@ -122,7 +122,6 @@ st.markdown('''<div class="c-navbar">
         <a href="#how-it-works" class="c-nav-link">How It Works</a>
         <a href="#faq" class="c-nav-link">FAQ</a>
     </div>
-    <a href="#demo" class="c-btn c-btn-primary" style="padding:10px 20px">Get Started</a>
 </div>''', unsafe_allow_html=True)
 
 
@@ -357,16 +356,6 @@ for q, a in [
 st.markdown('</div>', unsafe_allow_html=True)
 
 
-# ═══════════════════════════════════════════════════════════════════
-# 10. FINAL CTA SECTION
-# ═══════════════════════════════════════════════════════════════════
-st.markdown('''
-<div class="c-final-cta">
-    <h2 class="c-heading">Ready to Master Your Codebase?</h2>
-    <p class="c-font">Stop guessing. Start analyzing. Paste your first repository below and see the magic in 60 seconds.</p>
-    <a href="#demo" class="c-btn c-btn-white">Start Your Free Trial</a>
-</div>
-''', unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════════════════════════

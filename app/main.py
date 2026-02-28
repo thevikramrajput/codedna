@@ -86,11 +86,18 @@ def run_pipeline(url, cb=None):
 endee_ok = False
 try:
     from endee import Endee
-    _c = Endee(); _c.set_base_url(f"http://{config.ENDEE_HOST}:{config.ENDEE_PORT}/api/v1")
+    
+    # Cloud environments usually need HTTPS
+    protocol = "https" if str(config.ENDEE_PORT) in ["443", "80"] else "http"
+    
+    _c = Endee()
+    _c.set_base_url(f"{protocol}://{config.ENDEE_HOST}:{config.ENDEE_PORT}/api/v1")
     _raw = _c.list_indexes()
     _il = _raw.get("indexes", []) if isinstance(_raw, dict) else _raw
     endee_ok = True
-except: _il = []
+except Exception as e:
+    _il = []
+    print(f"Endee connection failed: {e}")
 
 @st.cache_data
 def get_video_html(filepath):

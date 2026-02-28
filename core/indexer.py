@@ -52,7 +52,8 @@ class EndeeIndexer:
             self.client = Endee()
 
         # Set custom base URL if needed
-        base_url = f"http://{config.ENDEE_HOST}:{config.ENDEE_PORT}/api/v1"
+        protocol = "https" if str(config.ENDEE_PORT) in ["443", "80"] else "http"
+        base_url = f"{protocol}://{config.ENDEE_HOST}:{config.ENDEE_PORT}/api/v1"
         self.client.set_base_url(base_url)
 
         self.embedder = embedder
